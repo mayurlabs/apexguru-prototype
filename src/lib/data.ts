@@ -731,3 +731,95 @@ export const modPhases = [
     ],
   },
 ];
+
+// --- Dependency Graph Data ---
+
+export interface DepNode {
+  id: string;
+  label: string;
+  type: "Trigger" | "Apex" | "Flow" | "Batch" | "LWC" | "API";
+  cluster: string;
+  recommendation: "Keep" | "Simplify" | "Modernize" | "Retire";
+  methods?: number;
+  calledBy?: number;
+}
+
+export interface DepEdge {
+  from: string;
+  to: string;
+  type: "calls" | "triggers" | "references" | "invokes";
+}
+
+export const depGraphsByCluster: Record<string, { nodes: DepNode[]; edges: DepEdge[] }> = {
+  "lc-1": {
+    nodes: [
+      { id: "n1", label: "OrderTrigger", type: "Trigger", cluster: "lc-1", recommendation: "Simplify", methods: 3, calledBy: 0 },
+      { id: "n2", label: "OrderItemTrigger", type: "Trigger", cluster: "lc-1", recommendation: "Simplify", methods: 2, calledBy: 0 },
+      { id: "n3", label: "OrderEventTrigger", type: "Trigger", cluster: "lc-1", recommendation: "Retire", methods: 1, calledBy: 0 },
+      { id: "n4", label: "OrderHandler", type: "Apex", cluster: "lc-1", recommendation: "Simplify", methods: 8, calledBy: 3 },
+      { id: "n5", label: "OrderService", type: "Apex", cluster: "lc-1", recommendation: "Keep", methods: 12, calledBy: 5 },
+      { id: "n6", label: "OrderHelper", type: "Apex", cluster: "lc-1", recommendation: "Simplify", methods: 6, calledBy: 4 },
+      { id: "n7", label: "OrderValidator", type: "Apex", cluster: "lc-1", recommendation: "Modernize", methods: 4, calledBy: 3 },
+      { id: "n8", label: "ShippingCalculator", type: "Apex", cluster: "lc-1", recommendation: "Keep", methods: 3, calledBy: 2 },
+      { id: "n9", label: "OrderApprovalFlow", type: "Flow", cluster: "lc-1", recommendation: "Keep", methods: 1, calledBy: 1 },
+      { id: "n10", label: "OrderStatusFlow", type: "Flow", cluster: "lc-1", recommendation: "Simplify", methods: 1, calledBy: 2 },
+      { id: "n11", label: "OrderFulfillmentBatch", type: "Batch", cluster: "lc-1", recommendation: "Keep", methods: 3, calledBy: 1 },
+      { id: "n12", label: "InventoryService", type: "Apex", cluster: "lc-1", recommendation: "Keep", methods: 7, calledBy: 3 },
+      { id: "n13", label: "PaymentService", type: "Apex", cluster: "lc-1", recommendation: "Keep", methods: 10, calledBy: 4 },
+      { id: "n14", label: "NotificationHelper", type: "Apex", cluster: "lc-1", recommendation: "Simplify", methods: 5, calledBy: 6 },
+      { id: "n15", label: "OrderAPI", type: "API", cluster: "lc-1", recommendation: "Keep", methods: 4, calledBy: 2 },
+      { id: "n16", label: "AccountTrigger", type: "Trigger", cluster: "lc-1", recommendation: "Simplify", methods: 2, calledBy: 0 },
+      { id: "n17", label: "CheckoutFlow", type: "Flow", cluster: "lc-1", recommendation: "Simplify", methods: 1, calledBy: 1 },
+    ],
+    edges: [
+      { from: "n1", to: "n4", type: "calls" },
+      { from: "n2", to: "n4", type: "calls" },
+      { from: "n3", to: "n4", type: "calls" },
+      { from: "n4", to: "n5", type: "calls" },
+      { from: "n4", to: "n6", type: "calls" },
+      { from: "n4", to: "n7", type: "calls" },
+      { from: "n5", to: "n8", type: "calls" },
+      { from: "n5", to: "n12", type: "calls" },
+      { from: "n5", to: "n13", type: "calls" },
+      { from: "n5", to: "n14", type: "calls" },
+      { from: "n6", to: "n7", type: "calls" },
+      { from: "n6", to: "n14", type: "calls" },
+      { from: "n7", to: "n14", type: "calls" },
+      { from: "n9", to: "n5", type: "invokes" },
+      { from: "n10", to: "n4", type: "invokes" },
+      { from: "n10", to: "n14", type: "invokes" },
+      { from: "n11", to: "n5", type: "calls" },
+      { from: "n11", to: "n12", type: "calls" },
+      { from: "n15", to: "n5", type: "calls" },
+      { from: "n16", to: "n6", type: "triggers" },
+      { from: "n17", to: "n5", type: "invokes" },
+      { from: "n17", to: "n7", type: "invokes" },
+      { from: "n13", to: "n14", type: "calls" },
+    ],
+  },
+  "lc-2": {
+    nodes: [
+      { id: "l1", label: "LeadTrigger", type: "Trigger", cluster: "lc-2", recommendation: "Modernize", methods: 2, calledBy: 0 },
+      { id: "l2", label: "LeadHandler", type: "Apex", cluster: "lc-2", recommendation: "Modernize", methods: 6, calledBy: 2 },
+      { id: "l3", label: "LeadScoringService", type: "Apex", cluster: "lc-2", recommendation: "Modernize", methods: 5, calledBy: 3 },
+      { id: "l4", label: "LeadRoutingEngine", type: "Apex", cluster: "lc-2", recommendation: "Modernize", methods: 4, calledBy: 2 },
+      { id: "l5", label: "LeadAssignmentFlow", type: "Flow", cluster: "lc-2", recommendation: "Keep", methods: 1, calledBy: 1 },
+      { id: "l6", label: "CampaignMemberTrigger", type: "Trigger", cluster: "lc-2", recommendation: "Simplify", methods: 1, calledBy: 0 },
+      { id: "l7", label: "CampaignService", type: "Apex", cluster: "lc-2", recommendation: "Keep", methods: 8, calledBy: 3 },
+      { id: "l8", label: "LeadConversionBatch", type: "Batch", cluster: "lc-2", recommendation: "Keep", methods: 3, calledBy: 1 },
+      { id: "l9", label: "NotificationHelper", type: "Apex", cluster: "lc-2", recommendation: "Simplify", methods: 5, calledBy: 4 },
+    ],
+    edges: [
+      { from: "l1", to: "l2", type: "calls" },
+      { from: "l2", to: "l3", type: "calls" },
+      { from: "l2", to: "l4", type: "calls" },
+      { from: "l3", to: "l7", type: "calls" },
+      { from: "l4", to: "l9", type: "calls" },
+      { from: "l5", to: "l4", type: "invokes" },
+      { from: "l6", to: "l7", type: "calls" },
+      { from: "l8", to: "l3", type: "calls" },
+      { from: "l8", to: "l4", type: "calls" },
+      { from: "l7", to: "l9", type: "calls" },
+    ],
+  },
+};

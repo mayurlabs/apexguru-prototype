@@ -5,6 +5,7 @@ import {
   modIntelSummary,
   legacyClusters,
   modPhases,
+  depGraphsByCluster,
   LegacyCluster,
 } from "@/lib/data";
 import {
@@ -14,6 +15,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import DependencyGraph from "@/components/DependencyGraph";
 
 interface ModernizationIntelligenceProps {
   onBack: () => void;
@@ -75,6 +77,7 @@ export default function ModernizationIntelligence({ onBack }: ModernizationIntel
   const [animated, setAnimated] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [scanned, setScanned] = useState(true);
+  const [depGraphCluster, setDepGraphCluster] = useState<string | null>(null);
 
   useEffect(() => {
     setTimeout(() => setAnimated(true), 100);
@@ -140,11 +143,22 @@ export default function ModernizationIntelligence({ onBack }: ModernizationIntel
         </div>
       </div>
 
+      {/* Dependency Graph Modal */}
+      {depGraphCluster && depGraphsByCluster[depGraphCluster] && (
+        <DependencyGraph
+          nodes={depGraphsByCluster[depGraphCluster].nodes}
+          edges={depGraphsByCluster[depGraphCluster].edges}
+          clusterName={legacyClusters.find((c) => c.id === depGraphCluster)?.name || ""}
+          onClose={() => setDepGraphCluster(null)}
+        />
+      )}
+
       {/* Tabs */}
       <div className="slds-tabs mb-5">
         {[
           { key: "map", label: "Modernization Map" },
           { key: "clusters", label: "Legacy Clusters" },
+          { key: "dependencies", label: "Dependencies" },
           { key: "ai-readiness", label: "AI-Readiness" },
           { key: "plan", label: "Phased Plan" },
         ].map((tab) => (
@@ -361,7 +375,12 @@ export default function ModernizationIntelligence({ onBack }: ModernizationIntel
                         </div>
                         <div className="flex gap-2">
                           <button className="slds-btn slds-btn-brand text-[12px]">Begin Modernization</button>
-                          <button className="slds-btn text-[12px]">View Dependencies</button>
+                          <button
+                            className="slds-btn text-[12px]"
+                            onClick={(e) => { e.stopPropagation(); setDepGraphCluster(cluster.id); }}
+                          >
+                            🔗 View Dependencies
+                          </button>
                           <button className="slds-btn text-[12px]">View Components</button>
                         </div>
                       </div>
@@ -369,6 +388,65 @@ export default function ModernizationIntelligence({ onBack }: ModernizationIntel
                   </div>
                 );
               })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========= TAB: Dependencies ========= */}
+      {activeTab === "dependencies" && (
+        <div className="space-y-5 fade-in">
+          <div className="slds-card p-5">
+            <h3 className="text-[14px] font-semibold text-[#181818] mb-1">Dependency Analysis</h3>
+            <p className="text-[12px] text-[#706e6b] mb-4">
+              Visualize how components depend on each other within each cluster. Select a cluster to explore its dependency graph and understand the blast radius of modernization changes.
+            </p>
+
+            <div className="grid grid-cols-3 gap-4">
+              {legacyClusters.map((cluster) => {
+                const c = recColors[cluster.recommendation];
+                const hasGraph = !!depGraphsByCluster[cluster.id];
+                return (
+                  <button
+                    key={cluster.id}
+                    onClick={() => hasGraph && setDepGraphCluster(cluster.id)}
+                    className={`slds-card p-4 text-left transition-all ${hasGraph ? "cursor-pointer hover:shadow-md hover:border-[#0176d3]" : "opacity-50 cursor-not-allowed"}`}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-[13px] font-semibold text-[#181818]">{cluster.name}</span>
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold border" style={{ backgroundColor: c.bg, color: c.text, borderColor: c.border }}>
+                        {cluster.recommendation}
+                      </span>
+                    </div>
+                    <div className="flex gap-3 text-[11px] text-[#706e6b] mb-2">
+                      <span>{cluster.componentCount} components</span>
+                      <span>{cluster.entryPoints} entry points</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {hasGraph ? (
+                        <span className="text-[11px] text-[#0176d3] font-medium">🔗 View dependency graph →</span>
+                      ) : (
+                        <span className="text-[11px] text-[#706e6b]">Graph analysis pending</span>
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Why dependency analysis matters */}
+          <div className="slds-card p-5 bg-[#fef3e5] border-[#fe9339]/20">
+            <div className="flex items-start gap-3">
+              <span className="text-[20px] mt-0.5">🔗</span>
+              <div>
+                <div className="text-[13px] font-semibold text-[#3e3e3c] mb-1">
+                  Why Dependency Analysis Matters for Modernization
+                </div>
+                <p className="text-[12px] text-[#444] leading-relaxed">
+                  When you modernize a component — whether consolidating triggers, migrating to Flow, or retiring unused code — every component that depends on it must also be reviewed. The dependency graph reveals the full <strong>blast radius</strong> of any change: if OrderValidator is modernized to a Flow, every class that calls OrderValidator must update its invocation pattern. Without this view, modernization creates hidden breakage.
+                </p>
+              </div>
             </div>
           </div>
         </div>
