@@ -33,6 +33,8 @@ export interface PolicyRule {
   action: "Block" | "Review" | "Warn" | "Allow";
   scope: string;
   enabled: boolean;
+  sfEnforced?: boolean;
+  sfEnforcedReason?: string;
 }
 
 export interface ConversationMessage {
@@ -187,6 +189,36 @@ export const governanceStats: GovernanceStat[] = [
 
 export const defaultPolicies: PolicyRule[] = [
   {
+    id: "pol-sf-1",
+    name: "Governor Limit Violation Prevention",
+    condition: "Projected SOQL/DML/CPU exceeds 90% of governor limit",
+    action: "Block",
+    scope: "All deployments",
+    enabled: true,
+    sfEnforced: true,
+    sfEnforcedReason: "Salesforce platform stability — governor limit violations cause runtime failures across multi-tenant infrastructure",
+  },
+  {
+    id: "pol-sf-2",
+    name: "Critical Anti-Pattern Detection",
+    condition: "SOQL/DML inside loop OR recursive trigger/flow without guard",
+    action: "Block",
+    scope: "All deployments",
+    enabled: true,
+    sfEnforced: true,
+    sfEnforcedReason: "Salesforce best practices — these patterns cause cascading failures in multi-tenant environments and are never acceptable in production",
+  },
+  {
+    id: "pol-sf-3",
+    name: "Deprecated API Version Block",
+    condition: "Component uses API version < v50 (EOL)",
+    action: "Block",
+    scope: "Production deployments",
+    enabled: true,
+    sfEnforced: true,
+    sfEnforcedReason: "Salesforce platform compliance — end-of-life API versions are unsupported and may break without notice",
+  },
+  {
     id: "pol-1",
     name: "Critical Runtime Risk Block",
     condition: "CRI component score < 50 OR CPU regression > 30%",
@@ -329,6 +361,7 @@ export const initialConversation: ConversationMessage[] = [
       { label: "Show high-risk components", actionId: "show-hotspots" },
       { label: "Prevent future risk", actionId: "governance" },
       { label: "Suggest fixes", actionId: "remediation" },
+      { label: "Assess modernization readiness", actionId: "mod-intelligence" },
     ],
   },
 ];
@@ -483,6 +516,23 @@ export const conversationFlows: Record<string, ConversationMessage[]> = {
       ],
     },
   ],
+  "mod-intelligence": [
+    {
+      id: "mi-1",
+      role: "user",
+      content: "Assess modernization readiness",
+    },
+    {
+      id: "mi-2",
+      role: "agent",
+      content: "**Modernization Intelligence Assessment**\n\nI've scanned your org's customization estate. Here's the summary:\n\n📊 **Org Composition**\n• 1,247 Apex classes · 384 Flows · 89 Triggers\n• 23% AI-generated code · 14 deprecated API versions\n• 47 unused methods · 7 duplicate logic clusters\n\n🤖 **AI-Readiness Score: 58/100** (Needs Work)\n→ High dependency sprawl reduces agent reasoning quality\n→ Redundant logic creates ambiguity for AI-generated code\n→ Legacy patterns limit platform-native optimizations\n\n**Modernization Map:**\n• 🟢 **Keep** — 68% of codebase (stable, well-structured)\n• 🟡 **Simplify** — 12% (legacy patterns, refactorable)\n• 🔵 **Modernize** — 11% (migrate to Flow/Orchestration)\n• 🔴 **Retire** — 9% (unused, redundant, or deprecated)\n\nWould you like to explore the full modernization map?",
+      actions: [
+        { label: "View modernization map", actionId: "view-mod-intelligence" },
+        { label: "Show legacy clusters", actionId: "view-mod-intelligence" },
+        { label: "AI-readiness deep dive", actionId: "view-mod-intelligence" },
+      ],
+    },
+  ],
   exec: [
     {
       id: "e-1",
@@ -500,3 +550,184 @@ export const conversationFlows: Record<string, ConversationMessage[]> = {
     },
   ],
 };
+
+// --- Modernization Intelligence Data ---
+
+export interface LegacyCluster {
+  id: string;
+  name: string;
+  objects: string[];
+  componentCount: number;
+  triggerCount: number;
+  flowCount: number;
+  apexCount: number;
+  automationDensity: "High" | "Medium" | "Low";
+  entryPoints: number;
+  recommendation: "Keep" | "Simplify" | "Modernize" | "Retire";
+  rationale: string;
+  effort: string;
+  risk: "High" | "Medium" | "Low";
+  aiReadinessImpact: string;
+}
+
+export interface ModIntelSummary {
+  totalCustomizations: number;
+  keepPercent: number;
+  simplifyPercent: number;
+  modernizePercent: number;
+  retirePercent: number;
+  aiReadinessScore: number;
+  dependencySprawlScore: number;
+  automationDensityAvg: number;
+  legacyClusters: number;
+  deprecatedApis: number;
+  unusedMethods: number;
+  duplicateLogicClusters: number;
+  redundantTriggers: number;
+  estimatedEffortWeeks: number;
+}
+
+export const modIntelSummary: ModIntelSummary = {
+  totalCustomizations: 1720,
+  keepPercent: 68,
+  simplifyPercent: 12,
+  modernizePercent: 11,
+  retirePercent: 9,
+  aiReadinessScore: 58,
+  dependencySprawlScore: 72,
+  automationDensityAvg: 3.4,
+  legacyClusters: 6,
+  deprecatedApis: 14,
+  unusedMethods: 47,
+  duplicateLogicClusters: 7,
+  redundantTriggers: 12,
+  estimatedEffortWeeks: 8,
+};
+
+export const legacyClusters: LegacyCluster[] = [
+  {
+    id: "lc-1",
+    name: "Order Management",
+    objects: ["Order", "OrderItem", "OrderEvent__c"],
+    componentCount: 34,
+    triggerCount: 4,
+    flowCount: 6,
+    apexCount: 24,
+    automationDensity: "High",
+    entryPoints: 7,
+    recommendation: "Simplify",
+    rationale: "Multiple triggers on Order with overlapping logic. 4 entry points should be consolidated to 1 trigger framework handler. Flow-trigger hybrid creates ambiguous execution order.",
+    effort: "2–3 weeks",
+    risk: "High",
+    aiReadinessImpact: "AI agents cannot reliably predict execution path — too many competing entry points",
+  },
+  {
+    id: "lc-2",
+    name: "Lead Processing Pipeline",
+    objects: ["Lead", "Campaign", "CampaignMember"],
+    componentCount: 22,
+    triggerCount: 3,
+    flowCount: 4,
+    apexCount: 15,
+    automationDensity: "High",
+    entryPoints: 5,
+    recommendation: "Modernize",
+    rationale: "Rules-based lead routing and scoring logic currently in Apex is a strong candidate for Flow with Orchestration. Business logic is well-defined and low-complexity.",
+    effort: "2 weeks",
+    risk: "Medium",
+    aiReadinessImpact: "Moving to declarative patterns improves agent introspection and metadata-driven reasoning",
+  },
+  {
+    id: "lc-3",
+    name: "Case Escalation Logic",
+    objects: ["Case", "Entitlement", "Milestone"],
+    componentCount: 18,
+    triggerCount: 2,
+    flowCount: 8,
+    apexCount: 8,
+    automationDensity: "Medium",
+    entryPoints: 4,
+    recommendation: "Simplify",
+    rationale: "8 Flows with overlapping conditions create redundant paths. Consolidate into 2–3 well-structured Flows with clear priority ordering.",
+    effort: "1–2 weeks",
+    risk: "Medium",
+    aiReadinessImpact: "Reducing flow count improves context clarity for Agentforce actions",
+  },
+  {
+    id: "lc-4",
+    name: "Legacy Batch Reporting",
+    objects: ["Report__c", "ReportSnapshot__c", "ScheduledReport__c"],
+    componentCount: 12,
+    triggerCount: 0,
+    flowCount: 0,
+    apexCount: 12,
+    automationDensity: "Low",
+    entryPoints: 3,
+    recommendation: "Retire",
+    rationale: "Custom batch reporting logic replaced by native Salesforce reporting and Analytics. Zero active usage in 90+ days. 3 scheduled jobs still running but producing unused output.",
+    effort: "< 1 week",
+    risk: "Low",
+    aiReadinessImpact: "Removing dead code reduces noise for AI analysis and org scanning",
+  },
+  {
+    id: "lc-5",
+    name: "Account Enrichment Services",
+    objects: ["Account", "Contact", "AccountTeamMember"],
+    componentCount: 28,
+    triggerCount: 3,
+    flowCount: 3,
+    apexCount: 22,
+    automationDensity: "High",
+    entryPoints: 6,
+    recommendation: "Keep",
+    rationale: "Complex transactional logic with external API integrations and callout chains. Requires Apex for governor limit management and error handling. Well-structured with adequate test coverage (82%).",
+    effort: "N/A",
+    risk: "Low",
+    aiReadinessImpact: "Well-structured Apex with clear contracts is already AI-friendly — no change needed",
+  },
+  {
+    id: "lc-6",
+    name: "Approval & Discount Logic",
+    objects: ["Opportunity", "OpportunityLineItem", "Quote", "Discount__c"],
+    componentCount: 19,
+    triggerCount: 2,
+    flowCount: 5,
+    apexCount: 12,
+    automationDensity: "Medium",
+    entryPoints: 4,
+    recommendation: "Modernize",
+    rationale: "Discount calculations and approval routing currently split across Apex and Flows. Strong candidate for consolidation into Flow with Approval Process, reducing Apex footprint by ~60%.",
+    effort: "2–3 weeks",
+    risk: "Medium",
+    aiReadinessImpact: "Declarative approval logic is directly actionable by Agentforce — eliminates black-box Apex",
+  },
+];
+
+export const modPhases = [
+  {
+    phase: "Phase 1 — Quick Wins",
+    timeline: "Weeks 1–2",
+    items: [
+      { action: "Retire", target: "Legacy Batch Reporting cluster (12 components)", effort: "< 1 week", criImpact: "+3" },
+      { action: "Retire", target: "47 unused Apex methods across 12 classes", effort: "2–3 days", criImpact: "+2" },
+      { action: "Simplify", target: "Upgrade 14 deprecated API version references", effort: "1–2 days", criImpact: "+1" },
+    ],
+  },
+  {
+    phase: "Phase 2 — Consolidation",
+    timeline: "Weeks 3–5",
+    items: [
+      { action: "Simplify", target: "Order Management — consolidate 4 triggers to 1 framework handler", effort: "2–3 weeks", criImpact: "+4" },
+      { action: "Simplify", target: "Case Escalation — reduce 8 Flows to 3 with clear priority", effort: "1–2 weeks", criImpact: "+2" },
+      { action: "Consolidate", target: "7 duplicate logic clusters into shared services", effort: "1 week", criImpact: "+2" },
+    ],
+  },
+  {
+    phase: "Phase 3 — Modernize",
+    timeline: "Weeks 6–8",
+    items: [
+      { action: "Modernize", target: "Lead Processing — migrate scoring/routing to Flow + Orchestration", effort: "2 weeks", criImpact: "+3" },
+      { action: "Modernize", target: "Approval & Discount — consolidate into Flow + Approval Process", effort: "2–3 weeks", criImpact: "+3" },
+    ],
+  },
+];

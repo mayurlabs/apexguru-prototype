@@ -143,6 +143,10 @@ export default function AgentforcePanel({
       onNavigate("modernization");
       return;
     }
+    if (actionId === "view-mod-intelligence") {
+      onNavigate("mod-intelligence");
+      return;
+    }
     if (actionId === "view-exec") {
       onNavigate("exec");
       return;

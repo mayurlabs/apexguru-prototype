@@ -144,16 +144,17 @@ export default function PolicyBuilder({ onBack, onNavigate }: PolicyBuilderProps
         <div className="divide-y divide-[#e5e5e5]">
           {policies.map((policy) => {
             const colors = actionColors[policy.action];
+            const isSfEnforced = policy.sfEnforced === true;
             return (
               <div
                 key={policy.id}
                 className={`px-5 py-4 transition-colors ${
                   !policy.enabled ? "opacity-50" : ""
-                }`}
+                } ${isSfEnforced ? "bg-[#fafaf9]" : ""}`}
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
+                    <div className="flex items-center gap-2 mb-2 flex-wrap">
                       <span
                         className="inline-flex items-center px-2.5 py-0.5 rounded text-[11px] font-bold border"
                         style={{
@@ -168,6 +169,12 @@ export default function PolicyBuilder({ onBack, onNavigate }: PolicyBuilderProps
                         {policy.action === "Allow" && "✅ "}
                         {policy.action}
                       </span>
+                      {isSfEnforced && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-[#032d60] text-white border border-[#032d60]">
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>
+                          Salesforce Enforced
+                        </span>
+                      )}
                       <span className="text-[14px] font-semibold text-[#181818]">
                         {policy.name}
                       </span>
@@ -181,28 +188,41 @@ export default function PolicyBuilder({ onBack, onNavigate }: PolicyBuilderProps
                     <div className="text-[11px] text-[#706e6b]">
                       Scope: {policy.scope}
                     </div>
+                    {isSfEnforced && policy.sfEnforcedReason && (
+                      <div className="mt-2 text-[11px] text-[#032d60] bg-[#e5f1fd] rounded px-2.5 py-1.5 border border-[#0176d3]/20 leading-relaxed">
+                        <strong>Platform requirement:</strong> {policy.sfEnforcedReason}
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex items-center gap-3">
-                    <button
-                      className="text-[12px] text-[#0176d3] hover:underline cursor-pointer"
-                      onClick={() => setEditingPolicy(editingPolicy === policy.id ? null : policy.id)}
-                    >
-                      Edit
-                    </button>
-                    {/* Toggle */}
-                    <button
-                      onClick={() => togglePolicy(policy.id)}
-                      className={`relative w-[44px] h-[22px] rounded-full transition-colors ${
-                        policy.enabled ? "bg-[#0176d3]" : "bg-[#c9c9c9]"
-                      }`}
-                    >
-                      <span
-                        className={`absolute top-[2px] w-[18px] h-[18px] bg-white rounded-full shadow transition-all ${
-                          policy.enabled ? "left-[24px]" : "left-[2px]"
+                    {!isSfEnforced && (
+                      <button
+                        className="text-[12px] text-[#0176d3] hover:underline cursor-pointer"
+                        onClick={() => setEditingPolicy(editingPolicy === policy.id ? null : policy.id)}
+                      >
+                        Edit
+                      </button>
+                    )}
+                    {isSfEnforced ? (
+                      <div className="flex items-center gap-1.5 text-[11px] text-[#706e6b]">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#706e6b" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                        Locked
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => togglePolicy(policy.id)}
+                        className={`relative w-[44px] h-[22px] rounded-full transition-colors ${
+                          policy.enabled ? "bg-[#0176d3]" : "bg-[#c9c9c9]"
                         }`}
-                      />
-                    </button>
+                      >
+                        <span
+                          className={`absolute top-[2px] w-[18px] h-[18px] bg-white rounded-full shadow transition-all ${
+                            policy.enabled ? "left-[24px]" : "left-[2px]"
+                          }`}
+                        />
+                      </button>
+                    )}
                   </div>
                 </div>
 

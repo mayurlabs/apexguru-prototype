@@ -51,8 +51,18 @@ const sidebarItems = [
         expanded: true,
         children: [
           { label: "AI Remediation", view: "remediation" },
-          { label: "Modernization", view: "modernization" },
           { label: "Code Reusability", view: "modernization" },
+        ],
+      },
+      {
+        label: "Modernization Intelligence",
+        expanded: true,
+        children: [
+          { label: "Modernization Map", view: "mod-intelligence" },
+          { label: "Legacy Clusters", view: "mod-intelligence" },
+          { label: "Dependency Analysis", view: "mod-intelligence" },
+          { label: "AI-Readiness Score", view: "mod-intelligence" },
+          { label: "Phased Plan", view: "mod-intelligence" },
         ],
       },
       {

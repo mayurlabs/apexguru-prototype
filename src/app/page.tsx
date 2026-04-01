@@ -9,6 +9,7 @@ import PolicyBuilder from "@/components/PolicyBuilder";
 import DeploymentBlock from "@/components/DeploymentBlock";
 import RemediationView from "@/components/RemediationView";
 import ModernizationView from "@/components/ModernizationView";
+import ModernizationIntelligence from "@/components/ModernizationIntelligence";
 import ExecDashboard from "@/components/ExecDashboard";
 import { HotspotItem, hotspots } from "@/lib/data";
 
@@ -19,6 +20,7 @@ type ViewType =
   | "deployment"
   | "remediation"
   | "modernization"
+  | "mod-intelligence"
   | "exec";
 
 export default function Home() {
@@ -91,6 +93,12 @@ export default function Home() {
       case "modernization":
         return (
           <ModernizationView
+            onBack={() => setActiveView("dashboard")}
+          />
+        );
+      case "mod-intelligence":
+        return (
+          <ModernizationIntelligence
             onBack={() => setActiveView("dashboard")}
           />
         );
