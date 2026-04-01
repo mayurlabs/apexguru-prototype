@@ -326,6 +326,32 @@ export default function DependencyGraph({
                     <text x={30} y={32} fontSize={9} fill="#706e6b">
                       {node.type}{node.methods ? ` · ${node.methods} methods` : ""}
                     </text>
+                    {/* KEEP badge — "DO NOT TOUCH" */}
+                    {node.recommendation === "Keep" && !activeNode && (
+                      <g>
+                        <rect x={18} y={42} width={84} height={16} rx={3} fill="#2e844a" />
+                        <text x={60} y={53} textAnchor="middle" fontSize={8} fill="white" fontWeight="bold">🛡️ DO NOT TOUCH</text>
+                      </g>
+                    )}
+                    {/* Modernize / Simplify benefit label */}
+                    {node.recommendation === "Modernize" && !activeNode && (
+                      <g>
+                        <rect x={10} y={42} width={100} height={16} rx={3} fill="#0176d3" />
+                        <text x={60} y={53} textAnchor="middle" fontSize={8} fill="white" fontWeight="bold">🔄 Migrate to Flow</text>
+                      </g>
+                    )}
+                    {node.recommendation === "Simplify" && !activeNode && (
+                      <g>
+                        <rect x={18} y={42} width={84} height={16} rx={3} fill="#fe9339" />
+                        <text x={60} y={53} textAnchor="middle" fontSize={8} fill="white" fontWeight="bold">✏️ REFACTOR</text>
+                      </g>
+                    )}
+                    {node.recommendation === "Retire" && !activeNode && (
+                      <g>
+                        <rect x={25} y={42} width={70} height={16} rx={3} fill="#ea001e" />
+                        <text x={60} y={53} textAnchor="middle" fontSize={8} fill="white" fontWeight="bold">🗑️ REMOVE</text>
+                      </g>
+                    )}
                   </g>
                 );
               })}
@@ -419,6 +445,37 @@ export default function DependencyGraph({
                     </div>
                   </div>
                 )}
+
+                {/* Modernization benefit */}
+                <div className="border-t border-[#e5e5e5] pt-3">
+                  <div className="text-[11px] text-[#706e6b] uppercase tracking-wide mb-2 font-semibold">
+                    {selectedNodeData.recommendation === "Keep" ? "Why Keep" : "Modernization Benefit"}
+                  </div>
+                  {selectedNodeData.recommendation === "Keep" && (
+                    <div className="bg-[#e6f4ea] border border-[#2e844a]/20 rounded p-2.5">
+                      <p className="text-[11px] text-[#2e844a] font-semibold mb-1">🛡️ Do Not Touch</p>
+                      <p className="text-[11px] text-[#444] leading-relaxed">This component is well-structured with adequate test coverage. Changing it would introduce unnecessary risk with no architectural benefit.</p>
+                    </div>
+                  )}
+                  {selectedNodeData.recommendation === "Simplify" && (
+                    <div className="bg-[#fef3e5] border border-[#fe9339]/20 rounded p-2.5">
+                      <p className="text-[11px] text-[#8c4b00] font-semibold mb-1">✏️ Refactor Benefits</p>
+                      <p className="text-[11px] text-[#444] leading-relaxed">Consolidating this component reduces entry point sprawl, improves AI agent reasoning, and lowers maintenance overhead. The {downstream.size} downstream dependencies will need interface updates.</p>
+                    </div>
+                  )}
+                  {selectedNodeData.recommendation === "Modernize" && (
+                    <div className="bg-[#e5f1fd] border border-[#0176d3]/20 rounded p-2.5">
+                      <p className="text-[11px] text-[#0176d3] font-semibold mb-1">🔄 Migration Benefits</p>
+                      <p className="text-[11px] text-[#444] leading-relaxed">Moving to Flow/Orchestration enables Agentforce to directly introspect this logic via metadata. Eliminates black-box Apex for rules-based patterns. {downstream.size > 0 ? `Note: ${downstream.size} dependent component${downstream.size > 1 ? "s" : ""} will need updated invocation patterns.` : ""}</p>
+                    </div>
+                  )}
+                  {selectedNodeData.recommendation === "Retire" && (
+                    <div className="bg-[#fde8e8] border border-[#ea001e]/20 rounded p-2.5">
+                      <p className="text-[11px] text-[#ea001e] font-semibold mb-1">🗑️ Safe to Remove</p>
+                      <p className="text-[11px] text-[#444] leading-relaxed">Zero active invocations in 90+ days. Removing this component reduces noise for AI analysis and shrinks the org footprint with no functional impact.</p>
+                    </div>
+                  )}
+                </div>
               </div>
             ) : (
               <div className="text-center py-12">

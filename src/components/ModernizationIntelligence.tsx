@@ -16,6 +16,8 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import DependencyGraph from "@/components/DependencyGraph";
+import ModernizationWizard from "@/components/ModernizationWizard";
+import ComponentInventory from "@/components/ComponentInventory";
 
 interface ModernizationIntelligenceProps {
   onBack: () => void;
@@ -78,6 +80,8 @@ export default function ModernizationIntelligence({ onBack }: ModernizationIntel
   const [scanning, setScanning] = useState(false);
   const [scanned, setScanned] = useState(true);
   const [depGraphCluster, setDepGraphCluster] = useState<string | null>(null);
+  const [wizardCluster, setWizardCluster] = useState<string | null>(null);
+  const [inventoryCluster, setInventoryCluster] = useState<string | null>(null);
 
   useEffect(() => {
     setTimeout(() => setAnimated(true), 100);
@@ -142,6 +146,22 @@ export default function ModernizationIntelligence({ onBack }: ModernizationIntel
           </button>
         </div>
       </div>
+
+      {/* Modernization Wizard Modal */}
+      {wizardCluster && (
+        <ModernizationWizard
+          cluster={legacyClusters.find((c) => c.id === wizardCluster)!}
+          onClose={() => setWizardCluster(null)}
+        />
+      )}
+
+      {/* Component Inventory Modal */}
+      {inventoryCluster && (
+        <ComponentInventory
+          cluster={legacyClusters.find((c) => c.id === inventoryCluster)!}
+          onClose={() => setInventoryCluster(null)}
+        />
+      )}
 
       {/* Dependency Graph Modal */}
       {depGraphCluster && depGraphsByCluster[depGraphCluster] && (
@@ -374,14 +394,24 @@ export default function ModernizationIntelligence({ onBack }: ModernizationIntel
                           </div>
                         </div>
                         <div className="flex gap-2">
-                          <button className="slds-btn slds-btn-brand text-[12px]">Begin Modernization</button>
+                          <button
+                            className="slds-btn slds-btn-brand text-[12px]"
+                            onClick={(e) => { e.stopPropagation(); setWizardCluster(cluster.id); }}
+                          >
+                            ▶ Begin Modernization
+                          </button>
                           <button
                             className="slds-btn text-[12px]"
                             onClick={(e) => { e.stopPropagation(); setDepGraphCluster(cluster.id); }}
                           >
                             🔗 View Dependencies
                           </button>
-                          <button className="slds-btn text-[12px]">View Components</button>
+                          <button
+                            className="slds-btn text-[12px]"
+                            onClick={(e) => { e.stopPropagation(); setInventoryCluster(cluster.id); }}
+                          >
+                            📋 View Components
+                          </button>
                         </div>
                       </div>
                     )}
